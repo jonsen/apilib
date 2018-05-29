@@ -27,7 +27,7 @@ func main() {
 	})
 
 	svr.Get("/json", func(c *server.Context) {
-		c.Response(200, "ok", map[string]interface{}{"user": "my name is xxx"})
+		c.Response(200, map[string]interface{}{"user": "my name is xxx"}, "ok")
 	})
 
 	svr.Post("/echo", func(c *server.Context) {
@@ -38,7 +38,7 @@ func main() {
 			return
 		}
 
-		c.Response(200, "ok", req)
+		c.Response(200, req, "ok")
 	})
 
 	go func() {
@@ -49,14 +49,14 @@ func main() {
 	}()
 
 	go func() {
-		err := svr.RunTLS(":5198", "cert/ca.crt", "cert/server.crt", "cert/server.key")
+		err := svr.Run(":5198", "cert/server.crt", "cert/server.key", "cert/ca.crt")
 		if err != nil {
 			fmt.Println(err)
 		}
 	}()
 
 	go func() {
-		err := svr.RunTLS(":5199", "", "cert/server.crt", "cert/server.key")
+		err := svr.Run(":5199", "cert/server.crt", "cert/server.key")
 		if err != nil {
 			fmt.Println(err)
 		}

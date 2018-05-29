@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	apilib "github.com/jonsen/apilib/server"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	apilib "github.com/jonsen/apilib/server"
 )
 
 var (
@@ -80,14 +81,14 @@ func main() {
 	}()
 
 	go func() {
-		err := apilib.RunTLS(":5188", "cert/ca.crt", "cert/server.crt", "cert/server.key", nil)
+		err := apilib.Run(":5188", nil, "cert/server.crt", "cert/server.key", "cert/ca.crt")
 		if err != nil {
 			fmt.Println(err)
 		}
 	}()
 
 	go func() {
-		err := apilib.RunTLS(":5189", "", "cert/server.crt", "cert/server.key", nil)
+		err := apilib.Run(":5189", nil, "cert/server.crt", "cert/server.key")
 		if err != nil {
 			fmt.Println(err)
 		}

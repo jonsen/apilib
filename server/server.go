@@ -30,12 +30,8 @@ func NewServer(app, version string) *Server {
 	return &Server{m, r}
 }
 
-func (s *Server) RunTLS(addr, ca, crt, key string) error {
-	return RunTLS(addr, ca, crt, key, s)
-}
-
-func (s *Server) Run(addr string) error {
-	return Run(addr, s)
+func (s *Server) Run(addr string, ssl ...string) error {
+	return Run(addr, s, ssl...)
 }
 
 func (s *Server) AuthBasic(user, pass string) {

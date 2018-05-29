@@ -8,33 +8,31 @@ import (
 	"net/url"
 )
 
-func RunTLS(addr, ca, crt, key string, m http.Handler) error {
+func Run(addr string, m http.Handler, ssl ...string) error {
+	l := len(ssl)
+	if l == 3 {
+		pool := x509.NewCertPool()
 
-	if ca == "" {
-		return http.ListenAndServeTLS(addr, crt, key, m)
+		caCrt, err := ioutil.ReadFile(ssl[2])
+		if err != nil {
+			panic("ReadFile CA err:" + err.Error())
+		}
+		pool.AppendCertsFromPEM(caCrt)
+
+		s := &http.Server{
+			Addr:    addr,
+			Handler: m,
+			TLSConfig: &tls.Config{
+				ClientCAs:  pool,
+				ClientAuth: tls.RequireAndVerifyClientCert,
+			},
+		}
+
+		return s.ListenAndServeTLS(ssl[0], ssl[1])
 	}
-
-	pool := x509.NewCertPool()
-
-	caCrt, err := ioutil.ReadFile(ca)
-	if err != nil {
-		panic("ReadFile CA err:" + err.Error())
+	if l == 2 {
+		return http.ListenAndServeTLS(addr, ssl[0], ssl[1], m)
 	}
-	pool.AppendCertsFromPEM(caCrt)
-
-	s := &http.Server{
-		Addr:    addr,
-		Handler: m,
-		TLSConfig: &tls.Config{
-			ClientCAs:  pool,
-			ClientAuth: tls.RequireAndVerifyClientCert,
-		},
-	}
-
-	return s.ListenAndServeTLS(crt, key)
-}
-
-func Run(addr string, m http.Handler) error {
 
 	return http.ListenAndServe(addr, m)
 }
