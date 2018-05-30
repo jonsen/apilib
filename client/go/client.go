@@ -89,10 +89,10 @@ func (r RawResponse) Byte() []byte {
 	return r.Body
 }
 
-func (r RawResponse) Response(v interface{}) (res *Response, err error) {
+func (r RawResponse) Response(v ...interface{}) (res *Response, err error) {
 	res = new(Response)
-	if v != nil {
-		res.Body = v
+	if len(v) > 0 && v[0] != nil {
+		res.Body = v[0]
 	}
 	if r.Body == nil {
 		return nil, errors.New("body is null")
