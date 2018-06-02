@@ -93,20 +93,11 @@ func (p Params) Get(key string) string {
 //    }
 //
 func (c *Context) Params() (params Params) {
-	var pm martini.Params
-	value := c.Context.Get(reflect.TypeOf(pm))
+	value := c.Context.Get(reflect.TypeOf(params))
 	if !value.IsValid() {
 		return
 	}
-	if value.Type().Kind() != reflect.Map {
-		return
-	}
-	new := value.Convert(reflect.TypeOf(params))
-	if !new.IsValid() {
-		return
-	}
-
-	params = new.Interface().(Params)
+	params = value.Interface().(Params)
 
 	return
 }
