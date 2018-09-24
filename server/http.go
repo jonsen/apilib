@@ -11,24 +11,28 @@ import (
 func Run(addr string, m http.Handler, ssl ...string) error {
 	l := len(ssl)
 	if l == 3 {
-		pool := x509.NewCertPool()
+		if ssl[2] != "" {
+			pool := x509.NewCertPool()
 
-		caCrt, err := ioutil.ReadFile(ssl[2])
-		if err != nil {
-			panic("ReadFile CA err:" + err.Error())
+			caCrt, err := ioutil.ReadFile(ssl[2])
+			if err != nil {
+				panic("ReadFile CA err:" + err.Error())
+			}
+			pool.AppendCertsFromPEM(caCrt)
+
+			s := &http.Server{
+				Addr:    addr,
+				Handler: m,
+				TLSConfig: &tls.Config{
+					ClientCAs:  pool,
+					ClientAuth: tls.RequireAndVerifyClientCert,
+				},
+			}
+
+			return s.ListenAndServeTLS(ssl[0], ssl[1])
+		} else {
+			return http.ListenAndServeTLS(addr, ssl[0], ssl[1], m)
 		}
-		pool.AppendCertsFromPEM(caCrt)
-
-		s := &http.Server{
-			Addr:    addr,
-			Handler: m,
-			TLSConfig: &tls.Config{
-				ClientCAs:  pool,
-				ClientAuth: tls.RequireAndVerifyClientCert,
-			},
-		}
-
-		return s.ListenAndServeTLS(ssl[0], ssl[1])
 	}
 	if l == 2 {
 		return http.ListenAndServeTLS(addr, ssl[0], ssl[1], m)

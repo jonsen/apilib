@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 	"sync"
@@ -134,6 +135,18 @@ func (c *Context) Data(status int, v []byte) {
 	c.Write(v)
 }
 
+// HTML render
+func (c *Context) StaticFile(status int, file string) {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic("ReadFile err:" + err.Error())
+	}
+
+	c.Header().Set(ContentType, ContentHTML)
+	c.WriteHeader(status)
+	c.Write(content)
+}
+
 // Text render Text
 func (c *Context) Text(status int, v string) {
 	if c.Header().Get(ContentType) == "" {
@@ -184,7 +197,7 @@ func (c *Context) DelData(key string) {
 	c.data.Delete(key)
 }
 
-// Request read client's data
+// Request read client's json data
 func (c *Context) Request(body interface{}) (req *Request, err error) {
 	defer c.Req.Body.Close()
 
@@ -192,7 +205,7 @@ func (c *Context) Request(body interface{}) (req *Request, err error) {
 	return
 }
 
-// Response write data to client
+// Response write json to client
 func (c *Context) Response(code int, body interface{}, message string, v ...interface{}) {
 	c.JSON(200, ResponseWriter(code, fmt.Sprintf(message, v...), body))
 }

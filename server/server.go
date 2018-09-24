@@ -96,3 +96,8 @@ func (s *Server) NotFount() {
 		c.NotFound()
 	})
 }
+
+// Static server
+func (s *Server) Static(path, uri string) {
+	s.Use(martini.Static(path, martini.StaticOptions{Prefix: uri}))
+}
