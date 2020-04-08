@@ -1,33 +1,23 @@
 package server
 
 import (
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
-	"github.com/martini-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
 type (
 	Server struct {
-		*martini.Martini
-		Router
+		*gin.Engine
+		Application string
+		Version     string
 	}
-
-	// sessions
-	Session   sessions.Session
-	Render    render.Render
-	RenderOpt render.Options
 )
 
-func NewServer(app, version string) *Server {
-	r := NewRouter()
-	m := martini.New()
-	m.Use(martini.Logger())
-	m.Use(martini.Recovery())
-	m.Use(NewContext(CtxOptions{AppName: app, Version: version}))
-	m.MapTo(r, (*Routes)(nil))
-	m.Action(r.Handle)
+func NewServer(app, version, mode string) *Server {
+	e := gin.New()
+	e.Use(gin.Logger(), gin.Recovery())
+	gin.SetMode(mode)
 
-	return &Server{m, r}
+	return &Server{e, app, version}
 }
 
 func (s *Server) Run(addr string, ssl ...string) error {
@@ -35,9 +25,9 @@ func (s *Server) Run(addr string, ssl ...string) error {
 }
 
 func (s *Server) AuthBasic(user, pass string) {
-	s.Use(func(c *Context) {
-		if !AuthBasic(user, pass, c.Req) {
-			c.AuthFailed()
+	s.Use(func(c *gin.Context) {
+		if !AuthBasic(user, pass, c.Request) {
+			s.AuthFailed(c)
 			return
 		}
 
@@ -46,9 +36,9 @@ func (s *Server) AuthBasic(user, pass string) {
 }
 
 func (s *Server) AuthXAPIKEY(key string) {
-	s.Use(func(c *Context) {
-		if !AuthXAPIKEY(key, c.Req) {
-			c.AuthFailed()
+	s.Use(func(c *gin.Context) {
+		if !AuthXAPIKEY(key, c.Request) {
+			s.AuthFailed(c)
 			return
 		}
 
@@ -57,10 +47,10 @@ func (s *Server) AuthXAPIKEY(key string) {
 }
 
 func (s *Server) AuthSecureURI(user, pass, key string) {
-	s.EnableSecure()
-	s.Use(func(c *Context) {
-		if !AuthSecureURI(user, pass, key, c.Req) {
-			c.AuthFailed()
+	//s.EnableSecure()
+	s.Use(func(c *gin.Context) {
+		if !AuthSecureURI(user, pass, key, c.Request) {
+			s.AuthFailed(c)
 			return
 		}
 
@@ -69,9 +59,9 @@ func (s *Server) AuthSecureURI(user, pass, key string) {
 }
 
 func (s *Server) AuthClient(allows []string) {
-	s.Use(func(c *Context) {
-		if !AuthClient(allows, c.Req) {
-			c.AuthFailed()
+	s.Use(func(c *gin.Context) {
+		if !AuthClient(allows, c.Request) {
+			s.AuthFailed(c)
 			return
 		}
 
@@ -79,25 +69,35 @@ func (s *Server) AuthClient(allows []string) {
 	})
 }
 
+// AuthFailed write auth failed message to client
+func (s *Server) AuthFailed(c *gin.Context) {
+	c.JSON(403, ResponseWriter(403, "authorization failed", nil))
+}
+
+// NotFound write page not found message to client
+func (s *Server) NotFound(c *gin.Context) {
+	c.JSON(404, ResponseWriter(404, "page not found", nil))
+}
+
 ///////
 
-func (s *Server) UseSession(key string) {
-	store := sessions.NewCookieStore([]byte(key))
-	s.Use(sessions.Sessions("api_session", store))
-}
+// func (s *Server) UseSession(key string) {
+// 	store := sessions.NewCookieStore([]byte(key))
+// 	s.Use(sessions.Sessions("api_session", store))
+// }
 
 ////
-func (s *Server) UseRender() {
-	s.Use(render.Renderer())
-}
+// func (s *Server) UseRender() {
+// 	s.Use(render.Renderer())
+// }
 
-func (s *Server) NotFount() {
-	s.NotFound(func(c *Context) {
-		c.NotFound()
-	})
-}
+// func (s *Server) NotFount() {
+// 	s.NotFound(func(c *Context) {
+// 		c.NotFound()
+// 	})
+// }
 
 // Static server
-func (s *Server) Static(path, uri string) {
-	s.Use(martini.Static(path, martini.StaticOptions{Prefix: uri}))
-}
+// func (s *Server) Static(path, uri string) {
+// 	s.Use(martini.Static(path, martini.StaticOptions{Prefix: uri}))
+// }

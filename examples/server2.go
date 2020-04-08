@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jonsen/apilib/server"
 )
 
@@ -18,27 +19,27 @@ var (
 
 func main() {
 
-	svr := server.NewServer("apiServer", "1.0")
+	svr := server.NewServer("apiServer", "1.0", "debug")
 	//svr.AuthBasic("user1", "pass1")
 
-	svr.Get("/foo", func(c *server.Context) {
-		c.Text(200, "foo func")
+	svr.GET("/foo", func(c *gin.Context) {
+		c.String(200, "foo func")
 
 	})
 
-	svr.Get("/json", func(c *server.Context) {
-		c.Response(200, map[string]interface{}{"user": "my name is xxx"}, "ok")
+	svr.GET("/json", func(c *gin.Context) {
+		svr.Response(c, 200, map[string]interface{}{"user": "my name is xxx"}, "ok")
 	})
 
-	svr.Post("/echo", func(c *server.Context) {
+	svr.POST("/echo", func(c *gin.Context) {
 		var body map[string]interface{}
-		req, err := c.Request(&body)
+		req, err := svr.Request(c, &body)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		c.Response(200, req, "ok")
+		svr.Response(c, 200, req, "ok")
 	})
 
 	go func() {

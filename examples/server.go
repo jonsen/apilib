@@ -38,19 +38,19 @@ func main() {
 
 		// author basic
 		if !apilib.AuthBasic(user, pass, r) {
-			apilib.AuthFailed(w)
+			//apilib.AuthFailed(w)
 			fmt.Println("AuthBasic AuthFailed")
 			return
 		}
 
 		if !apilib.AuthXAPIKEY(key, r) {
-			apilib.AuthFailed(w)
+			//apilib.AuthFailed(w)
 			fmt.Println("AuthXAPIKEY AuthFailed")
 			return
 		}
 
 		if !apilib.AuthSecureURI(user, pass, key, r) {
-			apilib.AuthFailed(w)
+			//apilib.AuthFailed(w)
 			fmt.Println("AuthXAPIKEY AuthFailed")
 			return
 		}
